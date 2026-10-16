@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import './App.css'
 import type { Listing, ListingSearchParams } from './types/listing'
 import { useListingSearch } from './hooks/useListingSearch'
+import { useSavedListings } from './context/SavedListingsContext'
 
 const SAVED_LISTINGS_KEY = 'listing-search:saved-listings'
 
@@ -11,50 +12,13 @@ function App() {
     pageSize: 3
   })
 
-  const [savedListings, setSavedListings] = useState<Listing[]>(() => {
-    try {
-      const stored = localStorage.getItem(SAVED_LISTINGS_KEY)
-
-      if (stored === null) {
-        return []
-      }
-
-      const parsed: unknown = JSON.parse(stored)
-
-      return Array.isArray(parsed) ? (parsed as Listing[]) : []
-    } catch {
-      return []
-    }
-  })
-
-  function isSaved(listing: Listing) {
-    return savedListings.some(
-      (saved) =>
-        saved.source === listing.source &&
-        saved.id === listing.id
-    )
-  }
-
-  function saveListing(listing: Listing) {
-    setSavedListings((previous) => {
-      const alreadySaved = previous.some(
-        (saved) =>
-          saved.source === listing.source &&
-          saved.id === listing.id
-      )
-
-      return alreadySaved ? previous : [...previous, listing]
-    })
-  }
-
-  function removeListing(listing: Listing) {
-    setSavedListings((previous) =>
-      previous.filter(
-        (saved) =>
-          !(saved.source === listing.source && saved.id === listing.id)
-      )
-    )
-  }
+  const {
+    savedListings,
+    savedCount,
+    saveListing,
+    removeListing,
+    isSaved
+  } = useSavedListings()
 
   const { data, isPending, isFetching, isError, error } = useListingSearch(searchParams);
 
