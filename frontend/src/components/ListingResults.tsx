@@ -1,21 +1,25 @@
-import type { Listing, ScoredListing } from '../types/listing'
+import { useSavedListings } from '../context/SavedListingsContext'
+import type { ScoredListing } from '../types/listing'
 
 interface ListingResultsProps {
   items: ScoredListing[]
-  onSave: (listing: Listing) => void
-  isSaved: (listing: Listing) => boolean
 }
 
 export function ListingResults({
   items,
-  onSave,
-  isSaved
 }: ListingResultsProps) {
+
+  const { 
+      saveListing,
+      isSaved
+    } = useSavedListings()
+
   return (
-    <ul>
+    <ul className="listing-results">
       {items.map(({ listing, relevanceScore }) => (
         <li key={JSON.stringify([listing.source, listing.id])}>
-          {listing.address}
+          <strong>{listing.address}</strong>
+          {' — '}{listing.city}
           {' — $'}
           {listing.price.toLocaleString()}
           {' — '}
@@ -25,10 +29,13 @@ export function ListingResults({
           {' — Score: '}
           {relevanceScore.toFixed(2)}
 
+          <p>{listing.description}</p>
+          <p>Listed {listing.listedDate}</p>
+
           <button
             type='button'
             disabled={isSaved(listing)}
-            onClick={() => onSave(listing)}
+            onClick={() => saveListing(listing)}
           >
             {isSaved(listing) ? 'Saved' : 'Save'}
           </button>

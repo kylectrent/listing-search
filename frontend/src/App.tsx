@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import './App.css'
-import type { Listing, ListingSearchParams } from './types/listing'
+import type { ListingSearchParams } from './types/listing'
 import { useListingSearch } from './hooks/useListingSearch'
 import { useSavedListings } from './context/SavedListingsContext'
-
-const SAVED_LISTINGS_KEY = 'listing-search:saved-listings'
+import { ListingResults } from './components/ListingResults'
+import SearchForm from './components/SearchForm'
 
 function App() {
   const [searchParams, setSearchParams] = useState<ListingSearchParams>({
@@ -14,28 +14,21 @@ function App() {
 
   const {
     savedListings,
-    savedCount,
-    saveListing,
     removeListing,
-    isSaved
   } = useSavedListings()
 
   const { data, isPending, isFetching, isError, error } = useListingSearch(searchParams);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(
-        SAVED_LISTINGS_KEY,
-        JSON.stringify(savedListings)
-      )
-    } catch {
-      console.error('Could not persist saved properties')
-    }
-  }, [savedListings])
+  const onSearch = (params: ListingSearchParams): void => {
+    setSearchParams(params);
+  }
+
 
   return (
     <>
       <h1>Listing Search</h1>
+
+      <SearchForm onSearch={onSearch} />
 
       {isPending && <p role='status'>Loading listings...</p>}
 
@@ -49,29 +42,7 @@ function App() {
 
           <p>{data.totalElements} listings found</p>
 
-          <ul>
-            {data.items.map(({ listing, relevanceScore }) => (
-              <li key={JSON.stringify([listing.source, listing.id])}>
-                {listing.address}
-                {'--$'}
-                {listing.price}
-                {'--'}
-                {listing.bedrooms} bedrooms
-                {'--'}
-                {listing.bathrooms} bathrooms
-                {'-- Score: '}
-                {relevanceScore.toFixed(2)}
-                <button
-                  type='button'
-                  disabled={isSaved(listing)}
-                  onClick={() => saveListing(listing)}
-                >
-                  {isSaved(listing) ? 'Saved' : 'Save'}
-                </button>
-              </li>
-            )
-            )}
-          </ul>
+          <ListingResults items={data.items} />
 
           <button
             type='button'
